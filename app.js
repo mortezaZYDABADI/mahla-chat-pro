@@ -1,0 +1,66 @@
+const socket = io();
+
+// کاربران و لیدرها
+let currentUser = null;
+let users = {};
+let leaders = { leader: null, assistants: [] };
+
+// ثبت نام
+function register() {
+  const name = document.getElementById("name").value;
+  const age = document.getElementById("age").value;
+  const gender = document.getElementById("gender").value;
+  const city = document.getElementById("city").value;
+
+  if(!name) return alert("نام الزامی است");
+
+  currentUser = { name, age, gender, city, id: socket.id };
+  socket.emit("register", currentUser);
+
+  document.getElementById("register-container").style.display = "none";
+  document.getElementById("chat-container").style.display = "flex";
+}
+
+// دریافت پیام خوش آمدگویی
+socket.on("welcome", msg => alert(msg));
+
+// نمایش کاربران آنلاین
+socket.on("users", onlineUsers => {
+  users = onlineUsers;
+  const div = document.getElementById("users");
+  div.innerHTML = "";
+  Object.values(users).forEach(u => {
+    let roleClass = "";
+    if(u.id === leaders.leader) roleClass="leader";
+    else if(leaders.assistants.includes(u.id)) roleClass="assistant";
+    div.innerHTML += `<div class="${roleClass}">${u.name} ${roleClass==="leader"?"👑":roleClass==="assistant"?"🗿":""}</div>`;
+  });
+});
+
+// دریافت پیام‌ها
+socket.on("message", data => {
+  const div = document.createElement("div");
+  div.innerHTML = `<b>${data.user.name}:</b> ${data.text}`;
+  document.getElementById("messages").appendChild(div);
+});
+
+// ارسال پیام
+function sendMsg() {
+  const input = document.getElementById("msgInput");
+  if(input.value.trim() === "") return;
+  socket.emit("message", input.value);
+  input.value="";
+}
+
+// --------------------------
+// TODO: توسعه تمام امکانات پیشرفته
+// 1. سیستم لیدر و معاون لیدر 👑🗿
+// 2. Timeout / Mute / Warn ⏱️
+// 3. تغییر فونت، رنگ و تم 🎨 + چک رنگ
+// 4. چت خصوصی 🔒
+// 5. سیستم گزارش و ویرایش پیام ⚠️
+// 6. سیستم رأی گیری تغییر لیدر 🗳️
+// 7. پنجره چت شناور 🪟
+// 8. ایموجی محدود 😎
+// 9. تماس ویدئویی 🎥
+// 10. پس‌زمینه متحرک ❤️🔥
