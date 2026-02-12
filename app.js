@@ -64,3 +64,70 @@ function sendMsg() {
 // 8. ایموجی محدود 😎
 // 9. تماس ویدئویی 🎥
 // 10. پس‌زمینه متحرک ❤️🔥
+// --------------------------
+// سیستم لیدر و معاون
+let warnings = {}; // ذخیره هشدارها {userId: count}
+let mutedUsers = {}; // ذخیره کاربران سکوت شده {userId: timestamp پایان سکوت}
+
+// تعیین لیدر و معاون
+function assignAssistant() {
+  const targetName = prompt("نام کاربری برای معاون:");
+  const target = Object.values(users).find(u=>u.name===targetName);
+  if(target){
+    leaders.assistants.push(target.id);
+    alert(target.name+" اکنون معاون است 🗿");
+    socket.emit("updateRoles", leaders);
+  }
+}
+
+function promoteToLeader() {
+  if(currentUser && leaders.assistants.includes(currentUser.id)){
+    leaders.leader = currentUser.id;
+    alert("شما اکنون لیدر هستید 👑");
+    socket.emit("updateRoles", leaders);
+  }
+}
+
+// هشدار و سکوت
+function warnUser() {
+  const targetName = prompt("نام کاربری برای هشدار:");
+  const target = Object.values(users).find(u=>u.name===targetName);
+  if(!target) return alert("کاربر یافت نشد");
+  
+  warnings[target.id] = (warnings[target.id] || 0)+1;
+  alert(`${target.name} هشدار ${warnings[target.id]} گرفت ⚠️`);
+
+  if(warnings[target.id]>=3){
+    mutedUsers[target.id] = Date.now() + 3*60*1000; // 3 دقیقه سکوت
+    alert(`${target.name} به مدت 3 دقیقه سکوت شد ⏱️`);
+    socket.emit("muteUser", {id:target.id, until:mutedUsers[target.id]});
+    warnings[target.id] = 0; // ریست هشدارها
+  }
+}
+
+// هنگام ارسال پیام چک می‌کنیم کاربر سکوت نشده باشه
+function sendMsg() {
+  if(mutedUsers[currentUser.id] && mutedUsers[currentUser.id]>Date.now()){
+    return alert("شما در حالت سکوت هستید ⏱️");
+  }
+  const input = document.getElementById("msgInput");
+  if(input.value.trim() === "") return;
+  socket.emit("message", input.value);
+  input.value="";
+}
+
+// نمایش دکمه‌ها فقط برای لیدر/معاون
+function updateControls() {
+  const div = document.getElementById("leader-controls");
+  if(currentUser && (currentUser.id===leaders.leader || leaders.assistants.includes(currentUser.id))){
+    div.style.display = "block";
+  } else {
+    div.style.display = "none";
+  }
+}
+
+// هر بار کاربران تغییر کردن، کنترل‌ها رو آپدیت کن
+socket.on("users", onlineUsers => {
+  users = onlineUsers;
+  updateControls();
+});
