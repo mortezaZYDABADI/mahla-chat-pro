@@ -22,19 +22,157 @@ body, html {
   border-radius:15px;
 }
 
-/* چت */
-#chat-container {
-  display:flex;
-  height:100vh; /* فول صفحه */
-  position: relative;
-  width:100vw; /* فول عرض */
+#register-container input, #register-container select, #register-container button {
+  margin:5px 0;
+  padding:10px;
+  width:250px;
+  border-radius:5px;
+  border:none;
 }
 
-/* سایدبار آنلاین‌ها */
+/* چت روم */
+#chat-container {
+  display:flex;
+  height:100vh;
+  width:100vw;
+  position: relative;
+}
+
+/* سایدبار */
 .sidebar {
   width:220px;
   background:#222;
   color:white;
+  padding:15px;
+  overflow-y:auto;
+}
+
+#users div, #channels div {
+  padding:5px;
+  margin:5px 0;
+  border-radius:5px;
+  background:rgba(255,255,255,0.1);
+  cursor:pointer;
+}
+
+/* پنجره چت */
+.chat {
+  flex:1;
+  background: rgba(255,255,255,0.95);
+  margin:10px;
+  border-radius:10px;
+  display:flex;
+  flex-direction:column;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  position: relative;
+}
+
+/* پیام‌ها */
+#messages {
+  flex:1;
+  overflow:auto;
+  padding:10px;
+  border-bottom:1px solid #ccc;
+}
+
+.message {
+  padding:5px 10px;
+  margin:5px 0;
+  border-radius:5px;
+  background:#f1f1f1;
+  display:flex;
+  justify-content: space-between;
+}
+
+.message .like-btn, .message .dislike-btn {
+  margin-left:5px;
+  cursor:pointer;
+}
+
+/* ورودی پیام */
+#msgInput, #privateMsgInput, #channelNameInput, #channelPriceInput {
+  padding:10px;
+  width:calc(100% - 100px);
+  border-radius:5px;
+  border:1px solid #ccc;
+  outline:none;
+  margin-top:5px;
+}
+
+.chat button {
+  width:80px;
+  margin-left:10px;
+  background:#007bff;
+  color:white;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+}
+
+.chat button:hover {
+  background:#0056b3;
+}
+
+/* پنجره شناور */
+#chat-container.floating {
+  position:absolute;
+  top:50px;
+  left:50px;
+  width:500px;
+  height:600px;
+  z-index:1000;
+  resize: both;
+  overflow: hidden;
+  border:2px solid #007bff;
+  border-radius:10px;
+}
+
+/* پیام لیدر و معاون */
+.leader {
+  font-weight:bold;
+  color:gold;
+}
+
+.assistant {
+  font-weight:bold;
+  color:silver;
+}
+
+/* پس‌زمینه متحرک */
+@keyframes bgMove {
+  0% {background-position:0 0;}
+  100% {background-position:1000px 0;}
+}
+
+body::before {
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  width:200%;
+  height:200%;
+  background: url('https://i.ibb.co/3v5P1Zx/heart-bg.png') repeat;
+  opacity:0.2;
+  z-index:-1;
+  animation:bgMove 60s linear infinite;
+}
+
+/* ریسپانسیو موبایل */
+@media (max-width:768px){
+  #chat-container {
+    flex-direction: column;
+  }
+  .sidebar {
+    width:100%;
+    height:100px;
+    order:2;
+  }
+  .chat {
+    width:100%;
+    flex:1;
+    order:1;
+  }
+}  color:white;
   padding:15px;
   overflow-y:auto;
 }
