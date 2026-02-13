@@ -1,40 +1,107 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="fa">
 <head>
 <meta charset="UTF-8">
-<title>چت روم مهلا</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مهلا - چت روم پیشرفته</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+<!-- ثبت نام و ورود -->
 <div id="register-container">
-  <h2>ثبت نام در چت روم مهلا</h2>
-  <input id="name" placeholder="نام">
-  <input id="age" placeholder="سن">
-  <select id="gender">
+  <h2>ثبت نام</h2>
+  <input type="text" id="nameInput" placeholder="نام">
+  <input type="number" id="ageInput" placeholder="سن (اختیاری)">
+  <select id="genderInput">
     <option value="">جنسیت</option>
     <option value="male">مرد</option>
     <option value="female">زن</option>
   </select>
-  <input id="city" placeholder="شهر">
-  <button onclick="register()">ثبت نام</button>
+  <input type="text" id="cityInput" placeholder="شهر/استان">
+  <button onclick="registerUser()">ثبت نام</button>
 </div>
 
+<!-- چت روم -->
 <div id="chat-container" style="display:none;">
+
+  <!-- سایدبار کاربران آنلاین -->
   <div class="sidebar">
-    <h3>آنلاین‌ها</h3>
+    <h4>کاربران آنلاین</h4>
     <div id="users"></div>
+
+    <!-- لیست کانال‌ها -->
+    <h4>کانال‌ها</h4>
+    <div id="channels"></div>
   </div>
 
+  <!-- پنجره چت -->
   <div class="chat">
     <div id="messages"></div>
-    <input id="msgInput" placeholder="پیام بنویس...">
-    <button onclick="sendMsg()">ارسال</button>
+
+    <div>
+      <input type="text" id="msgInput" placeholder="پیام...">
+      <button onclick="sendMsg()">ارسال</button>
+    </div>
+
+    <!-- ایموجی محدود -->
+    <div id="emoji-container">
+      <button onclick="sendEmoji('😊')">😊</button>
+      <button onclick="sendEmoji('😂')">😂</button>
+      <button onclick="sendEmoji('❤️')">❤️</button>
+      <button onclick="sendEmoji('🔥')">🔥</button>
+      <button onclick="sendEmoji('👍')">👍</button>
+      <button onclick="sendEmoji('😎')">😎</button>
+    </div>
+
+    <!-- چت خصوصی -->
+    <div id="private-chat-container">
+      <h4>چت خصوصی</h4>
+      <select id="private-user-select">
+        <option value="">انتخاب کاربر</option>
+      </select>
+      <input type="text" id="privateMsgInput" placeholder="پیام خصوصی">
+      <button onclick="sendPrivateMsg()">ارسال</button>
+    </div>
+
+    <!-- دکمه‌ها برای لیدر و معاون -->
+    <div id="leader-controls" style="display:none; margin-top:5px;">
+      <button onclick="assignAssistant()">انتخاب معاون 🗿</button>
+      <button onclick="timeoutUser()">Timeout ⏱️</button>
+      <button onclick="warnUser()">هشدار ⚠️</button>
+    </div>
+
+    <!-- دکمه پنجره شناور و ویدئو کال -->
+    <div style="margin-top:5px;">
+      <button onclick="toggleFloating()">پنجره شناور 🪟</button>
+      <button onclick="startVideoCall()">ویدئو کال 🎥</button>
+    </div>
+
+    <!-- پنل ساخت کانال با سکه -->
+    <div id="create-channel-container" style="margin-top:10px;">
+      <h4>ساخت کانال با سکه</h4>
+      <input type="text" id="channelNameInput" placeholder="نام کانال">
+      <input type="number" id="channelPriceInput" placeholder="هزینه ورود به کانال (سکه)">
+      <button onclick="createChannel()">ساخت کانال</button>
+    </div>
+
+    <!-- پروفایل و بیو -->
+    <div id="profile-container" style="margin-top:10px;">
+      <h4>پروفایل شما</h4>
+      <div>نام: <span id="profileName"></span></div>
+      <div>سکه: <span id="profileCoins">0</span> 🪙</div>
+      <div>کانال‌ها:</div>
+      <ul id="profileChannels"></ul>
+      <div>بیو / لینک کانال‌ها:</div>
+      <div id="profileBio"></div>
+    </div>
+
   </div>
 </div>
 
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script src="app.js"></script>
+</body>
+</html><script src="app.js"></script>
 </body>
 </html>
 <!-- لیست کاربران برای چت خصوصی -->
