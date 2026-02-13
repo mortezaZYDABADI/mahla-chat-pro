@@ -1,40 +1,196 @@
-const socket = io();
-
-// کاربران و لیدرها
+// ----------------------
+// متغیرها
+let users = {}; // کاربران آنلاین
+let channels = {}; // کانال‌ها
 let currentUser = null;
-let users = {};
+let emojiCount = 0;
+const EMOJI_LIMIT = 6;
+let warnings = {};
+let mutedUsers = {};
 let leaders = { leader: null, assistants: [] };
+let coins = {}; // سکه کاربران {userId: count}
 
+// ----------------------
 // ثبت نام
-function register() {
-  const name = document.getElementById("name").value;
-  const age = document.getElementById("age").value;
-  const gender = document.getElementById("gender").value;
-  const city = document.getElementById("city").value;
+function registerUser(){
+  const name = document.getElementById("nameInput").value.trim();
+  if(!name) return alert("نام را وارد کنید");
+  const age = document.getElementById("ageInput").value;
+  const gender = document.getElementById("genderInput").value;
+  const city = document.getElementById("cityInput").value.trim();
 
-  if(!name) return alert("نام الزامی است");
+  currentUser = {
+    id: Date.now(),
+    name, age, gender, city
+  };
+  users[currentUser.id] = currentUser;
+  coins[currentUser.id] = 10; // سکه اولیه
 
-  currentUser = { name, age, gender, city, id: socket.id };
-  socket.emit("register", currentUser);
-
-  document.getElementById("register-container").style.display = "none";
-  document.getElementById("chat-container").style.display = "flex";
+  document.getElementById("register-container").style.display="none";
+  document.getElementById("chat-container").style.display="flex";
+  updateProfile();
+  updateUsersList();
 }
 
-// دریافت پیام خوش آمدگویی
-socket.on("welcome", msg => alert(msg));
-
+// ----------------------
 // نمایش کاربران آنلاین
-socket.on("users", onlineUsers => {
-  users = onlineUsers;
-  const div = document.getElementById("users");
-  div.innerHTML = "";
-  Object.values(users).forEach(u => {
-    let roleClass = "";
-    if(u.id === leaders.leader) roleClass="leader";
-    else if(leaders.assistants.includes(u.id)) roleClass="assistant";
-    div.innerHTML += `<div class="${roleClass}">${u.name} ${roleClass==="leader"?"👑":roleClass==="assistant"?"🗿":""}</div>`;
+function updateUsersList(){
+  const container = document.getElementById("users");
+  container.innerHTML = "";
+  Object.values(users).forEach(u=>{
+    const div = document.createElement("div");
+    div.textContent = u.name + (leaders.leader===u.id?" 👑":leaders.assistants.includes(u.id)?" 🗿":"");
+    container.appendChild(div);
   });
+
+  // چت خصوصی
+  const select = document.getElementById("private-user-select");
+  select.innerHTML = '<option value="">انتخاب کاربر</option>';
+  Object.values(users).forEach(u=>{
+    if(u.id!==currentUser.id) select.innerHTML += `<option value="${u.id}">${u.name}</option>`;
+  });
+}
+
+// ----------------------
+// پروفایل
+function updateProfile(){
+  document.getElementById("profileName").textContent = currentUser.name;
+  document.getElementById("profileCoins").textContent = coins[currentUser.id] || 0;
+  const ul = document.getElementById("profileChannels");
+  ul.innerHTML="";
+  Object.values(channels).forEach(c=>{
+    if(c.owner===currentUser.id){
+      const li = document.createElement("li");
+      li.textContent = c.name + " (" + c.price + " 🪙)";
+      ul.appendChild(li);
+    }
+  });
+}
+
+// ----------------------
+// ارسال پیام عمومی
+function sendMsg(){
+  if(mutedUsers[currentUser.id] && mutedUsers[currentUser.id]>Date.now()){
+    return alert("شما در حالت سکوت هستید ⏱️");
+  }
+  const input = document.getElementById("msgInput");
+  if(input.value.trim()==="") return;
+  addMessage(currentUser.name, input.value);
+  input.value="";
+  coins[currentUser.id] = (coins[currentUser.id]||0)+1; // جایزه سکه برای چت
+  updateProfile();
+}
+
+// ----------------------
+// ارسال پیام خصوصی
+function sendPrivateMsg(){
+  const targetId = document.getElementById("private-user-select").value;
+  const msg = document.getElementById("privateMsgInput").value.trim();
+  if(!targetId || msg==="") return alert("کاربر و پیام را انتخاب کنید");
+  addMessage(currentUser.name+" → "+users[targetId].name, msg);
+  coins[currentUser.id] = (coins[currentUser.id]||0)+1;
+  updateProfile();
+  document.getElementById("privateMsgInput").value="";
+}
+
+// ----------------------
+// اضافه کردن پیام به پنجره
+function addMessage(sender, text){
+  const container = document.getElementById("messages");
+  const div = document.createElement("div");
+  div.className="message";
+  div.innerHTML=`<span>${sender}: ${text}</span>
+  <span>
+    <span class="like-btn" onclick="likeMsg(this)">👍</span>
+    <span class="dislike-btn" onclick="dislikeMsg(this)">👎</span>
+  </span>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+// ----------------------
+// لایک و دیسلایک
+function likeMsg(el){
+  el.style.color="green";
+}
+function dislikeMsg(el){
+  el.style.color="red";
+}
+
+// ----------------------
+// ایموجی محدود
+function sendEmoji(e){
+  if(emojiCount>=EMOJI_LIMIT){ alert("محدودیت ایموجی ۶ در دقیقه"); return;}
+  addMessage(currentUser.name,e);
+  emojiCount++;
+  coins[currentUser.id] = (coins[currentUser.id]||0)+1;
+  updateProfile();
+}
+setInterval(()=>{emojiCount=0;},60000);
+
+// ----------------------
+// لیدر و معاون
+function assignAssistant(){
+  const name = prompt("نام کاربر برای معاون:");
+  const target = Object.values(users).find(u=>u.name===name);
+  if(target){
+    leaders.assistants.push(target.id);
+    updateUsersList();
+    alert(target.name+" اکنون معاون است 🗿");
+  }
+}
+function warnUser(){
+  const name = prompt("نام کاربر برای هشدار:");
+  const target = Object.values(users).find(u=>u.name===name);
+  if(!target) return alert("کاربر یافت نشد");
+  warnings[target.id] = (warnings[target.id]||0)+1;
+  alert(`${target.name} هشدار ${warnings[target.id]} گرفت ⚠️`);
+  if(warnings[target.id]>=3){
+    mutedUsers[target.id] = Date.now() + 3*60*1000;
+    alert(`${target.name} سکوت شد 3 دقیقه ⏱️`);
+    warnings[target.id]=0;
+  }
+}
+
+// ----------------------
+// پنجره شناور و ویدئو کال
+function toggleFloating(){ document.getElementById("chat-container").classList.toggle("floating"); }
+function startVideoCall(){
+  navigator.mediaDevices.getUserMedia({video:true,audio:true})
+  .then(stream=>{
+    const video = document.createElement("video");
+    video.srcObject=stream;
+    video.autoplay=true;
+    video.width=200;
+    document.body.appendChild(video);
+  }).catch(e=>{alert("دسترسی به دوربین/میکروفون مشکل دارد");});
+}
+
+// ----------------------
+// ساخت کانال با سکه
+function createChannel(){
+  const name = document.getElementById("channelNameInput").value.trim();
+  const price = parseInt(document.getElementById("channelPriceInput").value);
+  if(!name || !price) return alert("نام و قیمت کانال را وارد کنید");
+  if(coins[currentUser.id]<price) return alert("سکه کافی نیست 🪙");
+
+  coins[currentUser.id]-=price; // کم شدن سکه کاربر
+  // واریز سکه به مدیر (id=0)
+  coins[0] = (coins[0]||0)+price;
+
+  const channelId = Date.now();
+  channels[channelId] = {id:channelId,name,price,owner:currentUser.id};
+  updateProfile();
+  updateChannelsList();
+}
+
+function updateChannelsList(){
+  const div = document.getElementById("channels");
+  div.innerHTML="";
+  Object.values(channels).forEach(c=>{
+    div.innerHTML += `<div>${c.name} (${c.price} 🪙)</div>`;
+  });
+}  });
 });
 
 // دریافت پیام‌ها
